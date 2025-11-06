@@ -43,7 +43,7 @@
   <script>
     const vid = document.getElementById('bloomVideo');
     const overlay = document.getElementById('overlay');
-    const loopStartOffset = 7; // seconds before the end to loop back to — adjust as needed
+    const loopStartOffset = 7; // seconds before the end to loop back
     let isFullscreen = false;
 
     function enterFullscreen() {
@@ -60,7 +60,18 @@
       isFullscreen = false;
     }
 
-    // Initial tap: play video + go fullscreen
+    // Prevent pauses caused by fullscreen change
+    document.addEventListener('fullscreenchange', () => {
+      if (vid.paused) vid.play();
+    });
+    document.addEventListener('webkitfullscreenchange', () => {
+      if (vid.paused) vid.play();
+    });
+    document.addEventListener('msfullscreenchange', () => {
+      if (vid.paused) vid.play();
+    });
+
+    // Initial tap: hide overlay, start playback, go fullscreen
     overlay.addEventListener('click', async () => {
       overlay.style.display = 'none';
       vid.playbackRate = 0.75;
@@ -68,7 +79,7 @@
       enterFullscreen();
     });
 
-    // Every subsequent tap toggles fullscreen on/off
+    // Subsequent taps toggle fullscreen but never pause playback
     document.addEventListener('click', () => {
       if (overlay.style.display === 'none') {
         if (isFullscreen) {
@@ -76,10 +87,11 @@
         } else {
           enterFullscreen();
         }
+        vid.play(); // ensure continuous playback
       }
     });
 
-    // Loop only the final few seconds smoothly
+    // Loop only the last few seconds seamlessly
     vid.addEventListener('timeupdate', () => {
       if (vid.duration && vid.duration - vid.currentTime < 0.2) {
         vid.currentTime = vid.duration - loopStartOffset;
