@@ -30,6 +30,8 @@
     const loopStartOffset = 7; // seconds before the end to loop back to — adjust as needed
 
     vid.addEventListener('loadeddata', () => {
+      // Set slower playback speed for more grace
+      vid.playbackRate = 0.75;
       // Try to start fullscreen automatically
       if (vid.requestFullscreen) {
         vid.requestFullscreen();
