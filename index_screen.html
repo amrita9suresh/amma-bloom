@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>The Bloom — Display Version</title>
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      background-color: black;
+      height: 100%;
+      overflow: hidden;
+    }
+    video {
+      width: 100vw;
+      height: 100vh;
+      object-fit: cover;
+      background-color: black;
+      display: block;
+    }
+  </style>
+</head>
+<body>
+  <video id="bloomVideo" autoplay muted playsinline preload="auto">
+    <source src="AmmaBloom.mp4" type="video/mp4">
+    Your browser does not support HTML5 video.
+  </video>
+
+  <script>
+    const vid = document.getElementById('bloomVideo');
+    const loopStartOffset = 3; // seconds before the end to loop back
+
+    // Set smooth playback rate
+    vid.playbackRate = 0.75;
+
+    // Prevent controls or flashes
+    vid.controls = false;
+    vid.addEventListener('loadedmetadata', () => {
+      vid.controls = false;
+    });
+    vid.addEventListener('play', () => {
+      vid.controls = false;
+    });
+
+    // Hide controls whenever user interacts
+    vid.addEventListener('mousemove', () => {
+      vid.controls = false;
+    });
+
+    // Loop the final few seconds seamlessly
+    vid.addEventListener('timeupdate', () => {
+      if (vid.duration && vid.duration - vid.currentTime < 0.2) {
+        vid.currentTime = vid.duration - loopStartOffset;
+        vid.play();
+      }
+    });
+
+    // Keep playback continuous
+    vid.addEventListener('ended', () => {
+      vid.currentTime = vid.duration - loopStartOffset;
+      vid.play();
+    });
+  </script>
+</body>
+</html>
