@@ -3,18 +3,18 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>The Bloom — Display Version</title>
+  <title>The Bloom — Animation Only</title>
   <style>
     html, body {
       margin: 0;
       padding: 0;
-      background-color: black;
       height: 100%;
+      background-color: black;
       overflow: hidden;
     }
     video {
-      width: 100vw;
-      height: 100vh;
+      width: 100%;
+      height: 100%;
       object-fit: cover;
       background-color: black;
       display: block;
@@ -29,37 +29,50 @@
 
   <script>
     const vid = document.getElementById('bloomVideo');
-    const loopStartOffset = 3; // seconds before the end to loop back
+    const loopStartOffset = 3;
+    let isFullscreen = false;
 
-    // Set smooth playback rate
-    vid.playbackRate = 0.75;
+    function hideControls() { vid.controls = false; }
+    vid.addEventListener('loadedmetadata', hideControls);
+    vid.addEventListener('play', hideControls);
+    vid.addEventListener('mousemove', hideControls);
+    vid.addEventListener('touchstart', hideControls);
 
-    // Prevent controls or flashes
-    vid.controls = false;
-    vid.addEventListener('loadedmetadata', () => {
-      vid.controls = false;
+    // Fullscreen helpers
+    function enterFullscreen() {
+      if (vid.requestFullscreen) vid.requestFullscreen();
+      else if (vid.webkitRequestFullscreen) vid.webkitRequestFullscreen();
+      else if (vid.msRequestFullscreen) vid.msRequestFullscreen();
+      isFullscreen = true;
+    }
+    function exitFullscreen() {
+      if (document.exitFullscreen) document.exitFullscreen();
+      else if (document.webkitExitFullscreen) document.webkitExitFullscreen();
+      else if (document.msExitFullscreen) document.msExitFullscreen();
+      isFullscreen = false;
+    }
+
+    // Maintain playback continuity
+    document.addEventListener('fullscreenchange', () => { if (vid.paused) vid.play(); hideControls(); });
+    document.addEventListener('webkitfullscreenchange', () => { if (vid.paused) vid.play(); hideControls(); });
+
+    // Autoplay at 0.75x
+    vid.addEventListener('canplay', () => { vid.playbackRate = 0.75; vid.play(); hideControls(); });
+
+    // Tap to toggle fullscreen, no pause
+    document.addEventListener('click', () => {
+      if (isFullscreen) exitFullscreen(); else enterFullscreen();
+      vid.play();
+      hideControls();
     });
-    vid.addEventListener('play', () => {
-      vid.controls = false;
-    });
 
-    // Hide controls whenever user interacts
-    vid.addEventListener('mousemove', () => {
-      vid.controls = false;
-    });
-
-    // Loop the final few seconds seamlessly
+    // Loop only last few seconds
     vid.addEventListener('timeupdate', () => {
       if (vid.duration && vid.duration - vid.currentTime < 0.2) {
         vid.currentTime = vid.duration - loopStartOffset;
         vid.play();
+        hideControls();
       }
-    });
-
-    // Keep playback continuous
-    vid.addEventListener('ended', () => {
-      vid.currentTime = vid.duration - loopStartOffset;
-      vid.play();
     });
   </script>
 </body>
