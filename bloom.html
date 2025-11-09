@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>The Bloom</title>
+  <title>The Bloom — Mobile Version</title>
   <style>
     html, body {
       margin: 0;
@@ -17,42 +17,73 @@
       height: 100%;
       object-fit: cover;
       background-color: black;
+      display: block;
     }
     #overlay {
       position: fixed;
       top: 0; left: 0;
       width: 100%; height: 100%;
-      background: rgba(0,0,0,0.8);
+      background: rgba(0,0,0,0.85);
       color: white;
       display: flex;
+      flex-direction: column;
       align-items: center;
       justify-content: center;
       font-size: 1.4em;
       text-align: center;
       z-index: 10;
       cursor: pointer;
+      transition: opacity 1s ease;
+    }
+    .icons {
+      display: flex;
+      gap: 2rem;
+      font-size: 2.5rem;
+      margin-bottom: 1.5rem;
+      opacity: 0.85;
+      animation: fadeIcons 4s ease-out forwards;
+    }
+    @keyframes fadeIcons {
+      0% { opacity: 0; transform: scale(0.9); }
+      20% { opacity: 1; transform: scale(1); }
+      80% { opacity: 1; }
+      100% { opacity: 0; }
     }
   </style>
 </head>
 <body>
-  <div id="overlay">🌸 Tap anywhere to begin fullscreen 🌸</div>
-  <video id="bloomVideo" autoplay muted playsinline>
+  <div id="overlay">
+    <div class="icons">
+      <span>☀️</span>
+      <span style="font-size:2.3rem;">🔄</span>
+    </div>
+    🌸 Tap anywhere to begin fullscreen 🌸
+  </div>
+
+  <video id="bloomVideo" autoplay muted playsinline preload="auto">
     <source src="LowRes.mp4" type="video/mp4">
   </video>
 
   <script>
     const vid = document.getElementById('bloomVideo');
     const overlay = document.getElementById('overlay');
-    const loopStartOffset = 7; // seconds before the end to loop back
+    const loopStartOffset = 3; // seconds before the end to loop back
     let isFullscreen = false;
 
+    // Ensure no controls ever appear
+    function hideControls() { vid.controls = false; }
+    vid.addEventListener('loadedmetadata', hideControls);
+    vid.addEventListener('play', hideControls);
+    vid.addEventListener('mousemove', hideControls);
+    vid.addEventListener('touchstart', hideControls);
+
+    // Fullscreen functions
     function enterFullscreen() {
       if (vid.requestFullscreen) vid.requestFullscreen();
       else if (vid.webkitRequestFullscreen) vid.webkitRequestFullscreen();
       else if (vid.msRequestFullscreen) vid.msRequestFullscreen();
       isFullscreen = true;
     }
-
     function exitFullscreen() {
       if (document.exitFullscreen) document.exitFullscreen();
       else if (document.webkitExitFullscreen) document.webkitExitFullscreen();
@@ -60,26 +91,27 @@
       isFullscreen = false;
     }
 
-    // Prevent pauses caused by fullscreen change
+    // Keep playback continuous across toggles
     document.addEventListener('fullscreenchange', () => {
+      hideControls();
       if (vid.paused) vid.play();
     });
     document.addEventListener('webkitfullscreenchange', () => {
-      if (vid.paused) vid.play();
-    });
-    document.addEventListener('msfullscreenchange', () => {
+      hideControls();
       if (vid.paused) vid.play();
     });
 
-    // Initial tap: hide overlay, start playback, go fullscreen
+    // Initial tap: hide overlay, start playback, enter fullscreen
     overlay.addEventListener('click', async () => {
-      overlay.style.display = 'none';
+      overlay.style.opacity = '0';
+      setTimeout(() => overlay.style.display = 'none', 1000);
       vid.playbackRate = 0.75;
       vid.play();
       enterFullscreen();
+      hideControls();
     });
 
-    // Subsequent taps toggle fullscreen but never pause playback
+    // Toggle fullscreen (no pause)
     document.addEventListener('click', () => {
       if (overlay.style.display === 'none') {
         if (isFullscreen) {
@@ -87,15 +119,17 @@
         } else {
           enterFullscreen();
         }
-        vid.play(); // ensure continuous playback
+        vid.play();
+        hideControls();
       }
     });
 
-    // Loop only the last few seconds seamlessly
+    // Loop the final few seconds seamlessly
     vid.addEventListener('timeupdate', () => {
       if (vid.duration && vid.duration - vid.currentTime < 0.2) {
         vid.currentTime = vid.duration - loopStartOffset;
         vid.play();
+        hideControls();
       }
     });
   </script>
